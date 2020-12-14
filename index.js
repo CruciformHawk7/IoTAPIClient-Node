@@ -5,8 +5,10 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 var dbinterface = require('./dbinterface');
-const { getDevice } = require('./dbinterface');
+const { getDevice } = dbinterface;
 dbinterface.initialiseMongo(mongoose);
+
+var isServerOn = true;
 
 app.use(cors());
 
@@ -14,7 +16,7 @@ app.use(cors());
 var getDataFromDev = async (IP) => {
     try {
         let request = bent();
-        let response = await request(IP);
+        let response = await request(`${IP}/GetData`);
         if (response.status == 200) {
             try {
                 var json = await response.json();
@@ -46,6 +48,15 @@ var getAllData = async() => {
     await dbinterface.putSample(tu, tp, bl, meas);
 }
 
+app.get('/SetServerStat', (req, res) => {
+    if (req.query.Status !== undefined) {
+        if (req.query.Status = "off" || req.query.Status == false) {
+            isServerOn = false;
+            console.log("Turned off server.");
+        }
+    }
+});
+
 /********* Calls from WebUI  *********/
 app.get('/Hello',(req, res) => {
     res.set('Content-Type', 'application/json');
@@ -68,7 +79,7 @@ app.post('/Add', async (req, res) => {
         var response;
         try {
             let request = bent();
-            response = await request(`${req.query.IP}`);
+            response = await request(`${req.query.IP}/Pair`);
             if (response.status == 200) {
                 try {
                     var json = await response.json();
@@ -118,7 +129,16 @@ app.post('/TestGetData', async (req, res) => {
     console.log(getDataFromDev(req.query.IP));
 });
 
-getAllData();
+// Scanning Server
+setInterval(() => {
+    if (isServerOn) {
+        try {
+            getAllData();
+        } catch(e) {
+            console.log(e);
+        }
+    }
+}, 1000);
 
 console.log('Listening on port 3000');
 app.listen(3000);
