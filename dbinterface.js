@@ -71,7 +71,17 @@ module.exports = {
     },
 
     getAllDeviceIPs: async() => {
-        var res = await Device.find({}, 'IP DeviceType ID');
+        var res = await Device.find({}, 'IP DeviceType ID Friendly');
+        return res;
+    },
+
+    getLastSample: async() => {
+        var res = await Sample.find().sort({$natural:-1}).limit(1);
+        return res;
+    },
+
+    getLastXSamples: async(x) => {
+        var res = await Sample.find().sort({$natural:-1}).limit(x);
         return res;
     }
 }

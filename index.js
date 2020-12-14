@@ -8,7 +8,7 @@ var dbinterface = require('./dbinterface');
 const { getDevice } = dbinterface;
 dbinterface.initialiseMongo(mongoose);
 
-var isServerOn = true;
+var isServerOn = false;
 
 app.use(cors());
 
@@ -55,6 +55,8 @@ app.get('/SetServerStat', (req, res) => {
             console.log("Turned off server.");
         }
     }
+    res.set('Content-Type', 'application/json');
+    res.send('{"message":"done"}');
 });
 
 /********* Calls from WebUI  *********/
@@ -69,12 +71,12 @@ app.post('/Add', async (req, res) => {
      || req.query.IP == undefined 
      || req.query.DeviceType == undefined) {
         res.status(400);
-        res.send('{ "error" : "Missing Parameters" }');
+        res.send('{ "message" : "Missing Parameters" }');
     } else if (req.query.DeviceType != 'Monitor' 
             && req.query.DeviceType != 'Generator'
             && req.query.DeviceType != 'Consumer'){
         res.status(400);
-        res.send('{"error" : "Malformed DeviceType." }');
+        res.send('{"message" : "Malformed DeviceType." }');
     } else {
         var response;
         try {
@@ -98,36 +100,51 @@ app.post('/Add', async (req, res) => {
     }
 });
 
-/********* Test routes *********/
+app.post('/GetDevices', async (req, res) => {
+    res.set('Content-Type', 'application/json');
+    res.send(await dbinterface.getAllDeviceIPs());
+});
+
+app.post('/GetSummary', async (req, res) => {
+    res.set('Content-Type', 'application/json');
+    res.send(await dbinterface.getLastSample());
+});
+
+app.post('/GetHistory', async(req, res) => {
+    res.set('Content-Type', 'application/json');
+    res.send(await dbinterface.getLastXSamples(15));
+});
+
+// /********* Test routes *********/
 app.get('/TestData1', async (req, res) => {
     let val = Math.floor(Math.random() * Math.floor(95));
     res.set('Content-Type', 'application/json');
     res.send(`{"ID":"aab", "Measure":${val} }`);
 });
-app.get('/TestData2', async (req, res) => {
-    let val = Math.floor(Math.random() * Math.floor(95));
-    res.set('Content-Type', 'application/json');
-    res.send(`{"ID":"aabc", "Measure":${val} }`);
-});
-app.get('/TestData3', async (req, res) => {
-    let val = Math.floor(Math.random() * Math.floor(95));
-    res.set('Content-Type', 'application/json');
-    res.send(`{"ID":"dde", "Measure":${val} }`);
-});
-app.get('/TestData4', async (req, res) => {
-    let val = Math.floor(Math.random() * Math.floor(95));
-    res.set('Content-Type', 'application/json');
-    res.send(`{"ID":"cac", "Measure":${val} }`);
-});
-app.get('/TestData5', async (req, res) => {
-    let val = Math.floor(Math.random() * Math.floor(95));
-    res.set('Content-Type', 'application/json');
-    res.send(`{"ID":"abc", "Measure":${val} }`);
-});
+// app.get('/TestData2', async (req, res) => {
+//     let val = Math.floor(Math.random() * Math.floor(95));
+//     res.set('Content-Type', 'application/json');
+//     res.send(`{"ID":"aabc", "Measure":${val} }`);
+// });
+// app.get('/TestData3', async (req, res) => {
+//     let val = Math.floor(Math.random() * Math.floor(95));
+//     res.set('Content-Type', 'application/json');
+//     res.send(`{"ID":"dde", "Measure":${val} }`);
+// });
+// app.get('/TestData4', async (req, res) => {
+//     let val = Math.floor(Math.random() * Math.floor(95));
+//     res.set('Content-Type', 'application/json');
+//     res.send(`{"ID":"cac", "Measure":${val} }`);
+// });
+// app.get('/TestData5', async (req, res) => {
+//     let val = Math.floor(Math.random() * Math.floor(95));
+//     res.set('Content-Type', 'application/json');
+//     res.send(`{"ID":"abc", "Measure":${val} }`);
+// });
 
-app.post('/TestGetData', async (req, res) => {
-    console.log(getDataFromDev(req.query.IP));
-});
+// app.post('/TestGetData', async (req, res) => {
+//     console.log(getDataFromDev(req.query.IP));
+// });
 
 // Scanning Server
 setInterval(() => {
